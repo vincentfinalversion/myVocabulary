@@ -1,7 +1,6 @@
 import pandas as pd
 from pathlib import Path
 
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 INPUT_FILE = BASE_DIR / "data" / "raw" / "main.csv"
@@ -18,7 +17,6 @@ def main():
 
     print(f"Processed {len(df)} words.")
     print(f"Output: {OUTPUT_FILE}")
-
 
 if __name__ == "__main__":
     main()
