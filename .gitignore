@@ -709,3 +709,5 @@ thumb
 sketch
 
 # End of https://www.toptal.com/developers/gitignore/api/aspnetcore,csharp,python,react
+
+data-pipeline/data/
