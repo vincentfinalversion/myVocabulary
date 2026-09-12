@@ -1,6 +1,21 @@
 @backend_HostAddress = http://localhost:5181
 
-GET {{backend_HostAddress}}/weatherforecast/
+### Get all 5-character words
+GET {{backend_HostAddress}}/api/words/by-length/0
 Accept: application/json
 
-###
+### Get all 7-character words
+GET {{backend_HostAddress}}/api/words/by-length/7
+Accept: application/json
+
+### Get 5-character words starting with "a"
+GET {{backend_HostAddress}}/api/words/by-letter-and-length?letter=a&length=5
+Accept: application/json
+
+### Get 6-character words starting with "b"
+GET {{backend_HostAddress}}/api/words/by-letter-and-length?letter=b&length=6
+Accept: application/json
+
+### Invalid letter (should return 400)
+GET {{backend_HostAddress}}/api/words/by-letter-and-length?letter=ab&length=5
+Accept: application/json
