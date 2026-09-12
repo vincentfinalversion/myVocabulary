@@ -9,7 +9,13 @@ OUTPUT_FILE = BASE_DIR / "data" / "processed" / "preprocessed.csv"
 def main():
     df = pd.read_csv(INPUT_FILE)
 
-    df["character_count"] = df["word"].str.len().astype("Int64")
+    before = len(df)
+    df = df.dropna(subset=["word"])
+    dropped = before - len(df)
+    if dropped:
+        print(f"Dropped {dropped} row(s) with missing word.")
+
+    df["character_count"] = df["word"].str.len().astype(int)
 
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
 
