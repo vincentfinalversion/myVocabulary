@@ -1,21 +1,53 @@
 @backend_HostAddress = http://localhost:5181
 
-### Get all 5-character words
-GET {{backend_HostAddress}}/api/words/by-length/0
+### Get all words (default batch size 2000)
+GET {{backend_HostAddress}}/api/words
 Accept: application/json
 
-### Get all 7-character words
-GET {{backend_HostAddress}}/api/words/by-length/7
+### Get all words, first small batch (for easy manual checking)
+GET {{backend_HostAddress}}/api/words?offset=0&limit=10
+Accept: application/json
+
+### Get all words, next batch after offset 10
+GET {{backend_HostAddress}}/api/words?offset=10&limit=10
+Accept: application/json
+
+### Get 5-character words (default batch size 2000)
+GET {{backend_HostAddress}}/api/words/by-length/5
+Accept: application/json
+
+### Get 5-character words, paginated
+GET {{backend_HostAddress}}/api/words/by-length/5?offset=0&limit=10
+Accept: application/json
+
+### Get words starting with "a" (default batch size 2000)
+GET {{backend_HostAddress}}/api/words/by-letter/a
+Accept: application/json
+
+### Get words starting with "a", paginated
+GET {{backend_HostAddress}}/api/words/by-letter/a?offset=0&limit=10
 Accept: application/json
 
 ### Get 5-character words starting with "a"
 GET {{backend_HostAddress}}/api/words/by-letter-and-length?letter=a&length=5
 Accept: application/json
 
-### Get 6-character words starting with "b"
-GET {{backend_HostAddress}}/api/words/by-letter-and-length?letter=b&length=6
+### Get 5-character words starting with "a", paginated
+GET {{backend_HostAddress}}/api/words/by-letter-and-length?letter=a&length=5&offset=0&limit=10
 Accept: application/json
 
-### Invalid letter (should return 400)
-GET {{backend_HostAddress}}/api/words/by-letter-and-length?letter=ab&length=5
+### Invalid: negative offset (should return 400)
+GET {{backend_HostAddress}}/api/words?offset=-1&limit=10
+Accept: application/json
+
+### Invalid: zero limit (should return 400)
+GET {{backend_HostAddress}}/api/words?offset=0&limit=0
+Accept: application/json
+
+### Invalid: negative length (should return 400)
+GET {{backend_HostAddress}}/api/words/by-length/-5
+Accept: application/json
+
+### Invalid letter, multiple characters (should return 400)
+GET {{backend_HostAddress}}/api/words/by-letter/ab
 Accept: application/json
