@@ -1,3 +1,18 @@
-:root {
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Mro&family=Noto+Serif+JP:wght@200..900&display=swap');
 
+:root {
+    --color-primary: #40B57A;
+    --color-primary-hover: #30885C;
+    --color-text-border: #0C0805;
+    --color-background:#F0E6DF;
+    --color-destructive: #B33951;
+    --primary-font: "Noto Serif JP", serif;
+    --secondary-font: "Noto Sans Mro", sans-serif;
+    --font-size-xs: 0.75rem;  
+    --font-size-sm: 0.875rem;  
+    --font-size-base: 1rem;    
+    --font-size-lg: 1.25rem;    
+    --font-size-xl: 1.5rem;     
+    --font-size-2xl: 2rem;     
+    --font-size-3xl: 2.5rem;
 }
