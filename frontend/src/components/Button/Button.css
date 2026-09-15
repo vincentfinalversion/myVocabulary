@@ -2,8 +2,8 @@
     user-select: none;
     border: 2px solid var(--color-text-border);
     font-family: var(--font-secondary);
-    font-size: var(--font-size-lg);
-    font-weight: 700; 
+    font-size: var(--font-size-base);
+    font-weight: 600; 
     border-radius: 0.5rem;
     padding: 0.25rem 0.5rem;
 }
