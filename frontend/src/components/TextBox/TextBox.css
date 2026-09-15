@@ -1,0 +1,34 @@
+.text-box-container{
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    box-sizing: border-box;
+}
+
+.text-box-label{
+    font-family: var(--font-primary);
+    font-weight: 600;
+}
+
+.text-box-input{
+    font-family: var(--font-secondary);
+    font-size: var(--font-size-lg);
+    border: 2px solid var(--color-text-border);
+    border-radius: 0.5rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.text-box-input:focus-visible {
+	outline: none;
+	border: 2px solid var(--color-primary-hover);
+}
+
+.text-box-error {
+    color: var(--color-destructive);
+    font-size: var(--font-size-xs);
+}
+
+.text-box-error.placeholder {
+    visibility: hidden;
+}
+
