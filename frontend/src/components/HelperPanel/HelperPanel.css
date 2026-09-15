@@ -1,0 +1,9 @@
+.search-panel-container{
+    display: flex;
+    flex-direction: column;
+}
+
+.helper-panel-container{
+    display: flex;
+    flex-direction: column;
+}
