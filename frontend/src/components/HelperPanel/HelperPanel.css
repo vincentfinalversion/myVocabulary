@@ -1,9 +1,30 @@
-.search-panel-container{
+.search-panel-container, .filter-panel-container{
     display: flex;
     flex-direction: column;
+    border: 3px solid var(--color-text-border);
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    gap: 0.2rem;
+}
+
+.search-panel-label, .filter-panel-label{
+    font-family: var(--font-primary);
+    font-size: var(--font-size-lg);
+    font-weight: 900;
+}
+
+.filter-textbox-container, .filter-button-container{
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-button-container{
+    gap: 0.5rem;
 }
 
 .helper-panel-container{
     display: flex;
     flex-direction: column;
+    gap: 0.5rem;
+    max-width: 20%;
 }

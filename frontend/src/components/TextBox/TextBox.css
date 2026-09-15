@@ -3,13 +3,12 @@
     flex-direction: column;
     flex: 1;
     box-sizing: border-box;
-    gap: 0.2rem;
 }
 
 .text-box-label{
     font-family: var(--font-primary);
-    font-weight: 900;
-    font-size: var(--font-size-lg);
+    font-weight: 600;
+    font-size: var(--font-size-base);
 }
 
 .text-box-input{
