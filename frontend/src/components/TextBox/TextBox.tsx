@@ -13,7 +13,7 @@ function TextBox ({
 }: TextBoxProps) {
   return(
     <div className="text-box-container">
-      {label && <label className="text-field-label">{label}</label>}
+      {label && <label className="text-box-label">{label}</label>}
       
       <input
         className="text-box-input"

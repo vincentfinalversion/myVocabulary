@@ -3,16 +3,19 @@
     flex-direction: column;
     flex: 1;
     box-sizing: border-box;
+    gap: 0.2rem;
 }
 
 .text-box-label{
     font-family: var(--font-primary);
-    font-weight: 600;
+    font-weight: 900;
+    font-size: var(--font-size-lg);
 }
 
 .text-box-input{
     font-family: var(--font-secondary);
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-base);
+    font-weight: 500;
     border: 2px solid var(--color-text-border);
     border-radius: 0.5rem;
     padding: 0.25rem 0.5rem;
@@ -31,4 +34,3 @@
 .text-box-error.placeholder {
     visibility: hidden;
 }
-
