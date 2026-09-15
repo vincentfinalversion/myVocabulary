@@ -1,0 +1,38 @@
+.button{
+    user-select: none;
+    border: 2px solid var(--color-text-border);
+    font-family: var(--font-secondary);
+    font-size: var(--font-size-lg);
+    font-weight: 700; 
+    border-radius: 0.5rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.button:focus-visible {
+	outline: none;
+	border: 2px solid var(--color-primary-hover);
+}       
+
+.button-primary{
+    background-color: var(--color-primary);
+}
+
+.button-primary:hover{
+    background-color: var(--color-primary-hover);
+}
+
+.button-secondary{
+    background-color: var(--color-background);
+}
+
+.button-secondary:hover{
+    background-color: var(--color-primary-hover);
+}
+
+.button-destructive{
+    background-color: var(--color-background);
+}
+
+.button-destructive:hover:not(:disabled){
+    background-color: var(--color-destructive);
+}
