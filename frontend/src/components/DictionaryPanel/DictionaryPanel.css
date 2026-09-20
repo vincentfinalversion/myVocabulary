@@ -1,0 +1,69 @@
+.dictionary-panel-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    border: 3px solid var(--color-text-border);
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    gap: 0.5rem;
+    width: 80%;
+    height: 80vh;
+    box-sizing: border-box;
+}
+
+.dictionary-panel-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.2rem;
+    border-bottom: 3px solid var(--color-text-border);
+}
+
+.dictionary-panel-header .button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.word-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    height: 100%;
+    overflow-y: scroll;
+    padding-right: 0.2rem;
+}
+
+.word-list-container::-webkit-scrollbar{
+    width: 5px;
+}
+
+.word-list-container::-webkit-scrollbar-track{
+    background: transparent;
+}
+
+.word-list-container::-webkit-scrollbar-thumb {
+    background: var(--color-text-border);
+}
+
+.word-card {
+    border: 2px solid var(--color-text-border);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.word-card-highlighted,
+.word-card-highlighted * {
+    background-color: var(--color-primary);
+}
+
+.word-card-word {
+    margin: 0;
+    font-family: var(--font-primary);
+    font-size: var(--font-size-lg);
+    font-weight: 900;
+}
+
+.word-card-definition {
+    margin: 0.25rem 0 0;
+    font-family: var(--font-secondary);
+    font-size: var(--font-size-sm);
+}
