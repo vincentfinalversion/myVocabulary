@@ -4,3 +4,8 @@ export interface Word {
   definition: string;
   characterCount: number;
 }
+
+export interface WordPosition {
+  id: number;
+  position: number;
+}

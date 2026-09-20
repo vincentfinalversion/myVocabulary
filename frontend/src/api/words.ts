@@ -1,4 +1,4 @@
-import type { Word } from './types';
+import type { Word, WordPosition } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 const DEFAULT_LIMIT = 2000;
@@ -49,4 +49,22 @@ export function getWordsByLetterAndLength(
   return fetchWords(
     `/api/words/by-letter-and-length?letter=${encodeURIComponent(letter)}&length=${length}&offset=${offset}&limit=${limit}`
   );
+}
+
+export async function getWordPosition(
+  word: string
+): Promise<WordPosition | null> {
+  const response = await fetch(
+    `${BASE_URL}/api/words/position?word=${encodeURIComponent(word)}`
+  );
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error(`Request failed (${response.status}): word position`);
+  }
+
+  return response.json();
 }
