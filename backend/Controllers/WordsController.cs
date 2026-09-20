@@ -113,5 +113,35 @@ namespace backend.Controllers
 
             return Ok(words);
         }
+
+        // GET api/words/position?word=abandon
+        [HttpGet("position")]
+        public async Task<ActionResult<WordPosition>> GetPosition([FromQuery] string word)
+        {
+            if (string.IsNullOrWhiteSpace(word))
+            {
+                return BadRequest("word must not be empty.");
+            }
+
+            var lowerWord = word.Trim().ToLowerInvariant();
+            var lowerLetter = lowerWord[..1];
+            var length = lowerWord.Length;
+
+            var matches = await _context.Words
+                .FromSqlInterpolated(
+                    $"SELECT id, word, definition, character_count FROM words WHERE LOWER(LEFT(word, 1)) = {lowerLetter} AND character_count = {length} AND LOWER(word) = {lowerWord} ORDER BY id LIMIT 1")
+                .ToListAsync();
+
+            var match = matches.FirstOrDefault();
+
+            if (match == null)
+            {
+                return NotFound();
+            }
+
+            var position = await _context.Words.CountAsync(w => w.Id < match.Id);
+
+            return Ok(new WordPosition(match.Id, position));
+        }
     }
 }
