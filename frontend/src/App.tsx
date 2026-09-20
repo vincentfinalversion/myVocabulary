@@ -93,7 +93,11 @@ function App() {
           />
         )}
 
-        <HelperPanel />
+        <HelperPanel
+          onSearch={(word) => console.log('search:', word)}
+          onApplyFilters={(filters) => console.log('apply:', filters)}
+          onClearFilters={() => console.log('clear')}
+        />
       </div>
     </div>
   );

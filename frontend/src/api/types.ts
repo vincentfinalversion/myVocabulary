@@ -9,3 +9,8 @@ export interface WordPosition {
   id: number;
   position: number;
 }
+
+export interface Filters {
+  letter: string | null;
+  length: number | null;
+}
