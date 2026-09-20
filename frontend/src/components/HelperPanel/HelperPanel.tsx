@@ -5,19 +5,20 @@ import Button from '../Button/Button';
 import './HelperPanel.css';
 
 type SearchPanelProps = {
-  onSearch: (word: string) => void;
+  onSearch: (word: string) => Promise<string | null>;
 };
 
 function SearchPanel({ onSearch }: SearchPanelProps) {
   const [searchText, setSearchText] = useState('');
   const [error, setError] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
 
   function handleChange(value: string) {
     setSearchText(value);
     setError('');
   }
 
-  function handleSearch() {
+  async function handleSearch() {
     const word = searchText.trim();
 
     if (!word) {
@@ -25,7 +26,13 @@ function SearchPanel({ onSearch }: SearchPanelProps) {
       return;
     }
 
-    onSearch(word);
+    setIsSearching(true);
+    try {
+      const message = await onSearch(word);
+      if (message) setError(message);
+    } finally {
+      setIsSearching(false);
+    }
   }
 
   return (
@@ -42,7 +49,7 @@ function SearchPanel({ onSearch }: SearchPanelProps) {
         onChange={(e) => handleChange(e.target.value)}
       />
 
-      <Button onClick={handleSearch}>
+      <Button onClick={handleSearch} disabled={isSearching}>
         Search
       </Button>
     </div>
@@ -143,7 +150,7 @@ function FilterPanel({ onApplyFilters, onClearFilters }: FilterPanelProps) {
 }
 
 type HelperPanelProps = {
-  onSearch: (word: string) => void;
+  onSearch: (word: string) => Promise<string | null>;
   onApplyFilters: (filters: Filters) => void;
   onClearFilters: () => void;
 };

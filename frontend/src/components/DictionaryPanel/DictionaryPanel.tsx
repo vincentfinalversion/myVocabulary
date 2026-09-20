@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import type { RefObject } from 'react';
 import type { Word } from '../../api/types';
 import Button from '../Button/Button';
@@ -11,7 +11,10 @@ type WordCardProps = {
 
 function WordCard({ word, highlighted }: WordCardProps) {
   return (
-    <div className={`word-card ${highlighted ? 'word-card-highlighted' : ''}`}>
+    <div  
+      id={`word-${word.id}`} 
+      className={`word-card ${highlighted ? 'word-card-highlighted' : ''}`}
+    >
       <p className='word-card-word'>{word.wordText}</p>
       <p className='word-card-definition'>{word.definition}</p>
     </div>
@@ -57,6 +60,14 @@ function DictionaryPanel({
 }: DictionaryPanelProps) {
   const listRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    if (highlightedId === undefined) return;
+
+    document
+      .getElementById(`word-${highlightedId}`)
+      ?.scrollIntoView({ block: 'center' });
+  }, [highlightedId, words]);
+  
   function scrollToTop() {
     listRef.current?.scrollTo({ top: 0 });
   }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Word } from './api/types';
-import { getWords } from './api/words';
+import { getWordPosition, getWords } from './api/words';
 import DictionaryPanel from './components/DictionaryPanel/DictionaryPanel';
 import HelperPanel from './components/HelperPanel/HelperPanel';
 import './App.css';
@@ -9,6 +9,7 @@ const PAGE_SIZE = 100;
 const BATCH_SIZE = 2000;
 const PAGES_PER_BATCH = BATCH_SIZE / PAGE_SIZE;
 const PREFETCH_PAGE = PAGES_PER_BATCH * 0.8;
+const SEARCH_ERROR = 'Something went wrong. Try again.';
 
 function getPageWords(
   batches: Record<number, Word[]>,
@@ -24,21 +25,27 @@ function getPageWords(
 function App() {
   const [mainBatch, setMainBatch] = useState<Record<number, Word[]>>({});
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  const [highlightedId, setHighlightedId] = useState<number | undefined>();
   const [error, setError] = useState<string | null>(null);
 
-  const requestedBatches = useRef<Set<number>>(new Set());
+  const batchRequests = useRef<Map<number, Promise<boolean>>>(new Map());
 
-  const loadBatch = useCallback(async (batchNumber: number) => {
-    if (requestedBatches.current.has(batchNumber)) return;
-    requestedBatches.current.add(batchNumber);
+  const loadBatch = useCallback((batchNumber: number): Promise<boolean> => {
+    const existing = batchRequests.current.get(batchNumber);
+    if (existing) return existing;
 
-    try {
-      const words = await getWords(batchNumber * BATCH_SIZE, BATCH_SIZE);
-      setMainBatch((prev) => ({ ...prev, [batchNumber]: words }));
-    } catch (err) {
-      requestedBatches.current.delete(batchNumber);
-      setError(err instanceof Error ? err.message : 'Failed to load words');
-    }
+    const request = getWords(batchNumber * BATCH_SIZE, BATCH_SIZE)
+      .then((words) => {
+        setMainBatch((prev) => ({ ...prev, [batchNumber]: words }));
+        return true;
+      })
+      .catch(() => {
+        batchRequests.current.delete(batchNumber);
+        return false;
+      });
+
+    batchRequests.current.set(batchNumber, request);
+    return request;
   }, []);
 
   const batchNumber = Math.floor(currentPageIndex / PAGES_PER_BATCH);
@@ -46,8 +53,12 @@ function App() {
   const currentBatch = mainBatch[batchNumber];
 
   useEffect(() => {
-    loadBatch(0);
-  }, [loadBatch]);
+    if (currentBatch) return;
+
+    loadBatch(batchNumber).then((ok) => {
+      if (!ok) setError('Failed to load words');
+    });
+  }, [batchNumber, currentBatch, loadBatch]);
 
   useEffect(() => {
     if (!currentBatch) return;
@@ -67,11 +78,41 @@ function App() {
     nextPageWords === undefined ? isBatchFull : nextPageWords.length > 0;
 
   function handlePrevious() {
+    setHighlightedId(undefined);
     setCurrentPageIndex((page) => page - 1);
   }
 
   function handleNext() {
+    setHighlightedId(undefined);
     setCurrentPageIndex((page) => page + 1);
+  }
+
+  async function backfillBatches(fromBatch: number) {
+    for (let batch = fromBatch; batch >= 0; batch--) {
+      const ok = await loadBatch(batch);
+      if (!ok) return;
+    }
+  }
+
+  async function handleSearch(word: string): Promise<string | null> {
+    try {
+      const result = await getWordPosition(word);
+      if (result === null) return 'Word not found';
+
+      const targetBatch = Math.floor(result.position / BATCH_SIZE);
+      const targetPage = Math.floor(result.position / PAGE_SIZE);
+
+      const loaded = await loadBatch(targetBatch);
+      if (!loaded) return SEARCH_ERROR;
+
+      setCurrentPageIndex(targetPage);
+      setHighlightedId(result.id);
+      backfillBatches(targetBatch - 1);
+
+      return null;
+    } catch {
+      return SEARCH_ERROR;
+    }
   }
 
   return (
@@ -86,6 +127,7 @@ function App() {
         ) : (
           <DictionaryPanel
             words={pageWords}
+            highlightedId={highlightedId}
             hasPrevious={hasPrevious}
             hasNext={hasNext}
             onPrevious={handlePrevious}
@@ -94,7 +136,7 @@ function App() {
         )}
 
         <HelperPanel
-          onSearch={(word) => console.log('search:', word)}
+          onSearch={handleSearch}
           onApplyFilters={(filters) => console.log('apply:', filters)}
           onClearFilters={() => console.log('clear')}
         />
