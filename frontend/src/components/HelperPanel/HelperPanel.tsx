@@ -150,12 +150,14 @@ function FilterPanel({ onApplyFilters, onClearFilters }: FilterPanelProps) {
 }
 
 type HelperPanelProps = {
+  filterResetKey: number;
   onSearch: (word: string) => Promise<string | null>;
   onApplyFilters: (filters: Filters) => void;
   onClearFilters: () => void;
 };
 
 function HelperPanel({
+  filterResetKey,
   onSearch,
   onApplyFilters,
   onClearFilters,
@@ -164,6 +166,7 @@ function HelperPanel({
     <div className='helper-panel-container'>
       <SearchPanel onSearch={onSearch} />
       <FilterPanel
+        key={filterResetKey}
         onApplyFilters={onApplyFilters}
         onClearFilters={onClearFilters}
       />

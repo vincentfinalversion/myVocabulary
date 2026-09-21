@@ -1,15 +1,42 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Word } from './api/types';
-import { getWordPosition, getWords } from './api/words';
+import { useEffect, useMemo, useState } from 'react';
+import type { Filters, Word } from './api/types';
+import {
+  getWordPosition,
+  getWords,
+  getWordsByLength,
+  getWordsByLetter,
+  getWordsByLetterAndLength,
+} from './api/words';
+import { BATCH_SIZE, useBatchLoader } from './hooks/useBatchLoader';
+import type { FetchBatch } from './hooks/useBatchLoader';
 import DictionaryPanel from './components/DictionaryPanel/DictionaryPanel';
 import HelperPanel from './components/HelperPanel/HelperPanel';
 import './App.css';
 
 const PAGE_SIZE = 100;
-const BATCH_SIZE = 2000;
 const PAGES_PER_BATCH = BATCH_SIZE / PAGE_SIZE;
 const PREFETCH_PAGE = PAGES_PER_BATCH * 0.8;
 const SEARCH_ERROR = 'Something went wrong. Try again.';
+
+const fetchMain: FetchBatch = (offset, limit) => getWords(offset, limit);
+
+function getFilteredFetcher(filters: Filters | null): FetchBatch | null {
+  if (!filters) return null;
+
+  const { letter, length } = filters;
+
+  if (letter !== null && length !== null) {
+    return (offset, limit) =>
+      getWordsByLetterAndLength(letter, length, offset, limit);
+  }
+  if (letter !== null) {
+    return (offset, limit) => getWordsByLetter(letter, offset, limit);
+  }
+  if (length !== null) {
+    return (offset, limit) => getWordsByLength(length, offset, limit);
+  }
+  return null;
+}
 
 function getPageWords(
   batches: Record<number, Word[]>,
@@ -23,73 +50,97 @@ function getPageWords(
 }
 
 function App() {
-  const [mainBatch, setMainBatch] = useState<Record<number, Word[]>>({});
+  const main = useBatchLoader(fetchMain);
+
+  const [appliedFilters, setAppliedFilters] = useState<Filters | null>(null);
+  const fetchFiltered = useMemo(
+    () => getFilteredFetcher(appliedFilters),
+    [appliedFilters]
+  );
+  const filtered = useBatchLoader(fetchFiltered);
+
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  const [filteredPageIndex, setFilteredPageIndex] = useState(0);
   const [highlightedId, setHighlightedId] = useState<number | undefined>();
+  const [filterResetKey, setFilterResetKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  const batchRequests = useRef<Map<number, Promise<boolean>>>(new Map());
+  const isFiltered = appliedFilters !== null;
+  const active = isFiltered ? filtered : main;
+  const activePageIndex = isFiltered ? filteredPageIndex : currentPageIndex;
+  const setActivePageIndex = isFiltered
+    ? setFilteredPageIndex
+    : setCurrentPageIndex;
+  const loadActiveBatch = active.loadBatch;
 
-  const loadBatch = useCallback((batchNumber: number): Promise<boolean> => {
-    const existing = batchRequests.current.get(batchNumber);
-    if (existing) return existing;
-
-    const request = getWords(batchNumber * BATCH_SIZE, BATCH_SIZE)
-      .then((words) => {
-        setMainBatch((prev) => ({ ...prev, [batchNumber]: words }));
-        return true;
-      })
-      .catch(() => {
-        batchRequests.current.delete(batchNumber);
-        return false;
-      });
-
-    batchRequests.current.set(batchNumber, request);
-    return request;
-  }, []);
-
-  const batchNumber = Math.floor(currentPageIndex / PAGES_PER_BATCH);
-  const pageInBatch = currentPageIndex % PAGES_PER_BATCH;
-  const currentBatch = mainBatch[batchNumber];
+  const batchNumber = Math.floor(activePageIndex / PAGES_PER_BATCH);
+  const pageInBatch = activePageIndex % PAGES_PER_BATCH;
+  const currentBatch = active.batches[batchNumber];
 
   useEffect(() => {
     if (currentBatch) return;
 
-    loadBatch(batchNumber).then((ok) => {
-      if (!ok) setError('Failed to load words');
+    loadActiveBatch(batchNumber).then((ok) => {
+      if (!ok) {
+        setError(
+          isFiltered ? 'Failed to load filtered words' : 'Failed to load words'
+        );
+      }
     });
-  }, [batchNumber, currentBatch, loadBatch]);
+  }, [batchNumber, currentBatch, loadActiveBatch, isFiltered]);
 
   useEffect(() => {
     if (!currentBatch) return;
 
     const isLastBatch = currentBatch.length < BATCH_SIZE;
     if (!isLastBatch && pageInBatch >= PREFETCH_PAGE) {
-      loadBatch(batchNumber + 1);
+      loadActiveBatch(batchNumber + 1);
     }
-  }, [currentBatch, batchNumber, pageInBatch, loadBatch]);
+  }, [currentBatch, batchNumber, pageInBatch, loadActiveBatch]);
 
-  const pageWords = getPageWords(mainBatch, currentPageIndex);
-  const nextPageWords = getPageWords(mainBatch, currentPageIndex + 1);
+  const pageWords = getPageWords(active.batches, activePageIndex);
+  const nextPageWords = getPageWords(active.batches, activePageIndex + 1);
   const isBatchFull = currentBatch?.length === BATCH_SIZE;
 
-  const hasPrevious = currentPageIndex > 0;
+  const hasPrevious = activePageIndex > 0;
   const hasNext =
     nextPageWords === undefined ? isBatchFull : nextPageWords.length > 0;
 
   function handlePrevious() {
     setHighlightedId(undefined);
-    setCurrentPageIndex((page) => page - 1);
+    setActivePageIndex((page) => page - 1);
   }
 
   function handleNext() {
     setHighlightedId(undefined);
-    setCurrentPageIndex((page) => page + 1);
+    setActivePageIndex((page) => page + 1);
+  }
+
+  function discardFilteredView() {
+    filtered.reset();
+    setFilteredPageIndex(0);
+    setAppliedFilters(null);
+  }
+
+  function handleApplyFilters(filters: Filters) {
+    setError(null);
+    setHighlightedId(undefined);
+    filtered.reset();
+    setFilteredPageIndex(0);
+    setAppliedFilters(filters);
+  }
+
+  function handleClearFilters() {
+    if (!isFiltered) return;
+
+    setError(null);
+    setHighlightedId(undefined);
+    discardFilteredView();
   }
 
   async function backfillBatches(fromBatch: number) {
     for (let batch = fromBatch; batch >= 0; batch--) {
-      const ok = await loadBatch(batch);
+      const ok = await main.loadBatch(batch);
       if (!ok) return;
     }
   }
@@ -102,8 +153,13 @@ function App() {
       const targetBatch = Math.floor(result.position / BATCH_SIZE);
       const targetPage = Math.floor(result.position / PAGE_SIZE);
 
-      const loaded = await loadBatch(targetBatch);
+      const loaded = await main.loadBatch(targetBatch);
       if (!loaded) return SEARCH_ERROR;
+
+      if (isFiltered) {
+        discardFilteredView();
+        setFilterResetKey((key) => key + 1);
+      }
 
       setCurrentPageIndex(targetPage);
       setHighlightedId(result.id);
@@ -124,8 +180,11 @@ function App() {
           <p className='app-message'>{error}</p>
         ) : !pageWords ? (
           <p className='app-message'>Loading…</p>
+        ) : isFiltered && activePageIndex === 0 && pageWords.length === 0 ? (
+          <p className='app-message'>No words match these filters.</p>
         ) : (
           <DictionaryPanel
+            key={isFiltered ? 'filtered' : 'main'}
             words={pageWords}
             highlightedId={highlightedId}
             hasPrevious={hasPrevious}
@@ -136,9 +195,10 @@ function App() {
         )}
 
         <HelperPanel
+          filterResetKey={filterResetKey}
           onSearch={handleSearch}
-          onApplyFilters={(filters) => console.log('apply:', filters)}
-          onClearFilters={() => console.log('clear')}
+          onApplyFilters={handleApplyFilters}
+          onClearFilters={handleClearFilters}
         />
       </div>
     </div>
